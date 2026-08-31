@@ -1,0 +1,49 @@
+<Window x:Class="QRCodeGenerator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:QRCodeGenerator"
+        mc:Ignorable="d"
+        Title="QR Code Generator" Height="700" Width="900">
+    <Grid Margin="10" Background="{StaticResource BackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="200" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Status Info -->
+        <TextBlock x:Name="InfoText" Grid.Row="0" FontSize="14" TextWrapping="Wrap" Foreground="{StaticResource ForegroundBrush}" />
+
+        <!-- Control Buttons -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,10" HorizontalAlignment="Left">
+            <Button x:Name="GenerateButton" Width="200" Height="30" Click="GenerateButton_Click">Generate QR with local IP</Button>
+            <Button x:Name="SendTestButton" Width="200" Height="30" Click="SendTestButton_Click" Margin="10,0,0,0">Send Test to First Client</Button>
+            <Button x:Name="SendLapButton" Width="200" Height="30" Click="SendLapButton_Click" Margin="10,0,0,0">Send Lap to First Client</Button>
+        </StackPanel>
+
+        <!-- Messages Section Header and Clear Button -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,10">
+            <TextBlock Text="Received Messages:" Foreground="{StaticResource ForegroundBrush}" VerticalAlignment="Center" FontWeight="Bold" />
+            <Button x:Name="ClearMessagesButton" Width="100" Height="30" Click="ClearMessagesButton_Click" Margin="10,0,0,0">Clear</Button>
+        </StackPanel>
+
+        <!-- Messages ListBox -->
+        <Border Grid.Row="2" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" Padding="10" Background="{StaticResource SecondaryBackgroundBrush}" Margin="0,30,260,32" Grid.RowSpan="2">
+            <ListBox x:Name="MessagesListBox" Foreground="{StaticResource ForegroundBrush}" Background="{StaticResource SecondaryBackgroundBrush}" />
+        </Border>
+
+        <!-- QR Code Section Header -->
+        <TextBlock Grid.Row="3" Text="QR Code:" Foreground="{StaticResource ForegroundBrush}" FontWeight="Bold" Margin="0,10,0,5" />
+
+        <!-- QR Code Display -->
+        <Border Grid.Row="4" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" Padding="10" Background="{StaticResource SecondaryBackgroundBrush}">
+            <Image x:Name="QrImage" Stretch="None" HorizontalAlignment="Center" VerticalAlignment="Top" />
+        </Border>
+        <Label Content="Connected Clients&#xD;&#xA;" HorizontalAlignment="Left" Margin="642,0,0,0" Grid.Row="2" VerticalAlignment="Top" Width="221"/>
+        <ListBox x:Name="ConnectedClientsBox"  Background="Black" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="625,30,0,32" Grid.Row="2" Grid.RowSpan="2" />
+    </Grid>
+</Window>
