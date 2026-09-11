@@ -26,15 +26,13 @@
         </StackPanel>
 
         <!-- Messages Section Header and Clear Button -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,10">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Top" Margin="10,112,260,0">
             <TextBlock Text="Received Messages:" Foreground="{StaticResource ForegroundBrush}" VerticalAlignment="Center" FontWeight="Bold" />
             <Button x:Name="ClearMessagesButton" Width="100" Height="30" Click="ClearMessagesButton_Click" Margin="10,0,0,0">Clear</Button>
         </StackPanel>
 
         <!-- Messages ListBox -->
-        <Border Grid.Row="2" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" Padding="10" Background="{StaticResource SecondaryBackgroundBrush}" Margin="0,30,260,32" Grid.RowSpan="2">
-            <ListBox x:Name="MessagesListBox" Foreground="{StaticResource ForegroundBrush}" Background="{StaticResource SecondaryBackgroundBrush}" />
-        </Border>
+        <Border Grid.Row="2" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" Padding="10" Background="{StaticResource SecondaryBackgroundBrush}" Margin="0,147,260,32" Grid.RowSpan="2"/>
 
         <!-- QR Code Section Header -->
         <TextBlock Grid.Row="3" Text="QR Code:" Foreground="{StaticResource ForegroundBrush}" FontWeight="Bold" Margin="0,10,0,5" />
@@ -45,5 +43,10 @@
         </Border>
         <Label Content="Connected Clients&#xD;&#xA;" HorizontalAlignment="Left" Margin="642,0,0,0" Grid.Row="2" VerticalAlignment="Top" Width="221"/>
         <ListBox x:Name="ConnectedClientsBox"  Background="Black" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="625,30,0,32" Grid.Row="2" Grid.RowSpan="2" />
+        <Grid Margin="10,10,260,100" Grid.Row="2">
+            <Button Content="SendRace" HorizontalAlignment="Left" VerticalAlignment="Top" Height="45" Width="153" Margin="447,45,0,0"/>
+            <TextBox TextWrapping="Wrap" Text="Enter Race Name" Margin="10,10,437,47"/>
+            <TextBox TextWrapping="Wrap" Text="Enter Heat" Margin="189,12,258,45"/>
+        </Grid>
     </Grid>
 </Window>

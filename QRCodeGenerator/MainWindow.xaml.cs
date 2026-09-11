@@ -26,7 +26,7 @@ namespace QRCodeGenerator
             _serverManager = new ServerManager(5000);
             _raceManager = new RaceManager();
             _qrCodeService = new QRCodeService();
-            _messageDisplayHandler = new MessageDisplayHandler(MessagesListBox);
+           // _messageDisplayHandler = new MessageDisplayHandler(MessagesListBox);
 
             // Subscribe to events
             _serverManager.StatusChanged += ServerManager_StatusChanged;

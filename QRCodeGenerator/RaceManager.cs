@@ -50,6 +50,17 @@ namespace QRCodeGenerator
             };
         }
 
+        public RaceStartInfo GetRaceStartInfo()
+        {
+            return new RaceStartInfo
+            {
+                RaceID = 12345,
+                RaceName = "Grand Prix",
+                RaceDate = DateTime.Now,
+                RaceHeat = "Heat 1"
+            };
+        }
+
         /// <summary>
         /// Resets the race state.
         /// </summary>

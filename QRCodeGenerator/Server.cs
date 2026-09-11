@@ -1,3 +1,4 @@
+using QRCodeGenerator;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -71,7 +72,7 @@ public class MobileBehavior : WebSocketBehavior
 
             string endpoint = Context?.UserEndPoint?.ToString() ?? "unknown";
             Trace.WriteLine($"Stored client {_clientId} from {endpoint}");
-
+            SendClientRaceData(_clientId);
             // Send client ID back to the client
             try { Send($"CLIENT_ID:{_clientId}"); }
             catch { /* Ignore send errors */ }
@@ -80,6 +81,13 @@ public class MobileBehavior : WebSocketBehavior
         {
             Trace.WriteLine($"Error storing client: {ex.Message}");
         }
+    }
+
+    private void SendClientRaceData(string clientID)
+    {
+        RaceManager _raceManager = new RaceManager();
+        var raceInfo = _raceManager.GetRaceStartInfo();
+        ClientStore.TrySendJsonToClient(clientID, raceInfo);
     }
 
     /// <summary>

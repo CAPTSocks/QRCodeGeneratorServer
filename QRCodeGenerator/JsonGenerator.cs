@@ -3,16 +3,31 @@ using System.Text.Json;
 
 namespace QRCodeGenerator
 {
+
+    public class  baseJsonStats
+    {
+        
+    }
     /// <summary>
     /// DTO for lap and race statistics to be sent to clients.
     /// </summary>
-    public class LapStats
+    public class LapStats : baseJsonStats
     {
-        public string raceData { get; set; } = "RaceData";
+        public string Type { get; set; } = "lapData";
         public int LapNumber { get; set; }
         public double LapTimeSeconds { get; set; }
         public double BestLapTimeSeconds { get; set; }
         public int RacePosition { get; set; }
+    }
+
+    public class RaceStartInfo : baseJsonStats
+    {
+        public string Type { get; set; } = "raceInfo";
+        public int RaceID { get; set; } = 00000;
+        public string RaceName { get; set; } = "DefaultRaceName";
+        public DateTime RaceDate { get; set; } = DateTime.Now;
+        public string RaceHeat { get; set; } = "DefaultHeat";
+
     }
 
     /// <summary>
@@ -33,7 +48,7 @@ namespace QRCodeGenerator
         {
             var stats = new LapStats
             {
-                raceData = "RaceData",
+                Type = "lapData",
                 LapNumber = lapNumber,
                 LapTimeSeconds = lapTime.TotalSeconds,
                 BestLapTimeSeconds = bestLapTime.TotalSeconds,
@@ -46,7 +61,7 @@ namespace QRCodeGenerator
         /// <summary>
         /// Serializes an existing LapStats object to JSON.
         /// </summary>
-        public static string GenerateJson(LapStats stats)
+        public static string GenerateJson(baseJsonStats stats)
         {
             if (stats == null)
                 throw new ArgumentNullException(nameof(stats));
