@@ -32,5 +32,154 @@
             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Background" Value="{StaticResource SecondaryBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+
+                        <Grid>
+
+                            <!-- Main border -->
+                            <Border
+                        x:Name="MainBorder"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+
+                                <Grid>
+
+                                    <!-- Selected item -->
+                                    <ContentPresenter
+                                Margin="8,0,30,0"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Left"
+                                Content="{TemplateBinding SelectionBoxItem}"
+                                ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                TextElement.Foreground="{TemplateBinding Foreground}" />
+
+                                    <!-- Dropdown button on the RIGHT -->
+                                    <ToggleButton
+                                x:Name="DropDownToggle"
+                                Width="30"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Stretch"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Focusable="False"
+                                IsChecked="{Binding IsDropDownOpen,
+                                    RelativeSource={RelativeSource TemplatedParent},
+                                    Mode=TwoWay}">
+
+                                        <Path
+                                    Data="M 0 0 L 8 0 L 4 5 Z"
+                                    Fill="{TemplateBinding Foreground}"
+                                    Width="8"
+                                    Height="5"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center" />
+
+                                    </ToggleButton>
+
+                                </Grid>
+
+                            </Border>
+
+                            <!-- Dropdown -->
+                            <Popup
+                        x:Name="PART_Popup"
+                        Placement="Bottom"
+                        IsOpen="{TemplateBinding IsDropDownOpen}"
+                        AllowsTransparency="True"
+                        Focusable="False"
+                        PopupAnimation="Slide">
+
+                                <Border
+                            Background="{StaticResource SecondaryBackgroundBrush}"
+                            BorderBrush="{StaticResource AccentBrush}"
+                            BorderThickness="1">
+
+                                    <ScrollViewer
+                                MaxHeight="300"
+                                HorizontalScrollBarVisibility="Disabled"
+                                VerticalScrollBarVisibility="Auto">
+
+                                        <ItemsPresenter />
+
+                                    </ScrollViewer>
+
+                                </Border>
+
+                            </Popup>
+
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+
+                            <!-- Hover -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter
+                            TargetName="MainBorder"
+                            Property="Background"
+                            Value="#FF303030" />
+                            </Trigger>
+
+                            <!-- Disabled -->
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter
+                            TargetName="MainBorder"
+                            Property="Opacity"
+                            Value="0.5" />
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+
+
+
+
+
+        <Style x:Key="PlaceholderTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Grid>
+                            <Border x:Name="border" 
+                                    BorderBrush="{TemplateBinding BorderBrush}" 
+                                    BorderThickness="{TemplateBinding BorderThickness}" 
+                                    Background="{TemplateBinding Background}" 
+                                    SnapsToDevicePixels="True">
+                                <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                            </Border>
+                            <TextBlock x:Name="placeholderText" 
+                                       Text="{TemplateBinding Tag}" 
+                                       Foreground="DarkGray" 
+                                       IsHitTestVisible="False" 
+                                       Margin="5,2,0,0"
+                                       VerticalAlignment="Center"
+                                       Visibility="Collapsed"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Text" Value="">
+                                <Setter TargetName="placeholderText" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="placeholderText" Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Application.Resources>
 </Application>

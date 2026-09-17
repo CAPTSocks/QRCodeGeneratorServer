@@ -72,7 +72,7 @@ public class MobileBehavior : WebSocketBehavior
 
             string endpoint = Context?.UserEndPoint?.ToString() ?? "unknown";
             Trace.WriteLine($"Stored client {_clientId} from {endpoint}");
-            SendClientRaceData(_clientId);
+            //SendClientRaceData(_clientId);
             // Send client ID back to the client
             try { Send($"CLIENT_ID:{_clientId}"); }
             catch { /* Ignore send errors */ }

@@ -23,7 +23,7 @@ namespace QRCodeGenerator
     public class RaceStartInfo : baseJsonStats
     {
         public string Type { get; set; } = "raceInfo";
-        public int RaceID { get; set; } = 00000;
+        public string RaceID { get; set; } = "";
         public string RaceName { get; set; } = "DefaultRaceName";
         public DateTime RaceDate { get; set; } = DateTime.Now;
         public string RaceHeat { get; set; } = "DefaultHeat";

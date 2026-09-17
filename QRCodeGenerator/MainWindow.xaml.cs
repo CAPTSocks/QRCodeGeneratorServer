@@ -15,6 +15,7 @@ namespace QRCodeGenerator
         private readonly RaceManager _raceManager;
         private readonly QRCodeService _qrCodeService;
         private readonly MessageDisplayHandler _messageDisplayHandler;
+        private List<RaceStartInfo> _raceStartInfos = new List<RaceStartInfo>();
 
         public MainWindow()
         {
@@ -26,10 +27,32 @@ namespace QRCodeGenerator
             _serverManager = new ServerManager(5000);
             _raceManager = new RaceManager();
             _qrCodeService = new QRCodeService();
-           // _messageDisplayHandler = new MessageDisplayHandler(MessagesListBox);
+            // _messageDisplayHandler = new MessageDisplayHandler(MessagesListBox);
 
-            // Subscribe to events
-            _serverManager.StatusChanged += ServerManager_StatusChanged;
+            RaceStartInfo raceInfo1 = _raceManager.GetRaceStartInfo();
+
+            raceInfo1.RaceName = "Test Race 1";
+            raceInfo1.RaceHeat = "Heat A";
+
+            RaceStartInfo raceInfo2 = _raceManager.GetRaceStartInfo();
+            raceInfo2.RaceName = "Test Race 2";
+            raceInfo2.RaceHeat = "Heat B";
+
+            RaceStartInfo raceInfo3 = _raceManager.GetRaceStartInfo();
+            raceInfo3.RaceName = "Test Race 3";
+            raceInfo3.RaceHeat = "Heat C";
+
+            _raceStartInfos.Add(raceInfo1);
+            _raceStartInfos.Add(raceInfo2);
+            _raceStartInfos.Add(raceInfo3);
+
+            foreach (var raceInfo in _raceStartInfos)
+            {
+                RaceSelector.Items.Add(raceInfo.RaceName);
+            }
+
+                // Subscribe to events
+                _serverManager.StatusChanged += ServerManager_StatusChanged;
             ClientStore.MessageReceived += ClientStore_MessageReceived;
             ClientStore.ClientsChanged += ClientStore_ClientsChanged;
         }
@@ -42,6 +65,20 @@ namespace QRCodeGenerator
                 foreach (var info in ClientStore.ClientInfos.Values)
                 {
                     ConnectedClientsBox.Items.Add(info.ToString());
+                }
+
+                foreach (var info in ClientStore.ClientInfos.Values)
+                {
+                    var racer = Racers.GetRacerByPin(info.pin); // Ensure racer is registered
+                    if (racer == null)
+                    {
+                        InfoText.Text += $"\nRacer not found for client: {info}";
+                    }
+                    else
+                    {
+                        InfoText.Text += $"\nRacer found in list: {info} - {racer.RacerFirstName} {racer.RacerLastName}";
+                    }
+                   
                 }
             });
         }
@@ -81,6 +118,13 @@ namespace QRCodeGenerator
             {
                 InfoText.Text = $"Error: {ex.Message}";
             }
+        }
+
+        private void SendRaceButton_Click(object sender, RoutedEventArgs e)
+        {
+            RaceStartInfo raceInfo = _raceStartInfos[RaceSelector.SelectedIndex];
+            foreach (var clientID in ClientStore.Clients.Keys)
+                ClientStore.TrySendJsonToClient(clientID, raceInfo);
         }
 
         private void SendTestButton_Click(object sender, RoutedEventArgs e)
@@ -136,7 +180,16 @@ namespace QRCodeGenerator
             _messageDisplayHandler.ClearMessages();
         }
 
+        private void RaceSelector_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            RaceStartInfo? selectedRace = _raceStartInfos.ElementAtOrDefault(RaceSelector.SelectedIndex);
+            RaceNameTextBox.Text = selectedRace?.RaceName ?? string.Empty;
+            HeatTextBox.Text = selectedRace?.RaceHeat ?? string.Empty;
+        }
+
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e) 
             => _serverManager.StopServer();
+
+       
     }
 }

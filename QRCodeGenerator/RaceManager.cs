@@ -54,7 +54,7 @@ namespace QRCodeGenerator
         {
             return new RaceStartInfo
             {
-                RaceID = 12345,
+                RaceID = Guid.NewGuid().ToString(),
                 RaceName = "Grand Prix",
                 RaceDate = DateTime.Now,
                 RaceHeat = "Heat 1"
