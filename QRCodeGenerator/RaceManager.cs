@@ -46,6 +46,7 @@ namespace QRCodeGenerator
                 LapNumber = _lapNumber,
                 LapTimeSeconds = lapTime.TotalSeconds,
                 BestLapTimeSeconds = BestLap.TotalSeconds,
+                BehindLeaderSeconds = _rnd.NextDouble() * -1,
                 RacePosition = racePosition
             };
         }
@@ -57,7 +58,8 @@ namespace QRCodeGenerator
                 RaceID = Guid.NewGuid().ToString(),
                 RaceName = "Grand Prix",
                 RaceDate = DateTime.Now,
-                RaceHeat = "Heat 1"
+                RaceHeat = "Heat 1",
+                RaceType = "Race"
             };
         }
 

@@ -27,7 +27,7 @@ namespace QRCodeGenerator
             _serverManager = new ServerManager(5000);
             _raceManager = new RaceManager();
             _qrCodeService = new QRCodeService();
-            // _messageDisplayHandler = new MessageDisplayHandler(MessagesListBox);
+             _messageDisplayHandler = new MessageDisplayHandler(MessagesListBox);
 
             RaceStartInfo raceInfo1 = _raceManager.GetRaceStartInfo();
 
@@ -42,9 +42,15 @@ namespace QRCodeGenerator
             raceInfo3.RaceName = "Test Race 3";
             raceInfo3.RaceHeat = "Heat C";
 
+            RaceStartInfo raceInfo4 = _raceManager.GetRaceStartInfo();
+            raceInfo4.RaceName = "Test Practice 1";
+            raceInfo4.RaceHeat = "Practice Heat";
+            raceInfo4.RaceType = "Practice";
+
             _raceStartInfos.Add(raceInfo1);
             _raceStartInfos.Add(raceInfo2);
             _raceStartInfos.Add(raceInfo3);
+            _raceStartInfos.Add(raceInfo4);
 
             foreach (var raceInfo in _raceStartInfos)
             {
@@ -55,6 +61,10 @@ namespace QRCodeGenerator
                 _serverManager.StatusChanged += ServerManager_StatusChanged;
             ClientStore.MessageReceived += ClientStore_MessageReceived;
             ClientStore.ClientsChanged += ClientStore_ClientsChanged;
+
+            MessengerService messengerService = new MessengerService();
+            messengerService.StopTheRace += StopRaceTest;
+            StartRaceButton.IsEnabled = false;
         }
 
         private void ClientStore_ClientsChanged(object? sender, EventArgs e)
@@ -175,6 +185,28 @@ namespace QRCodeGenerator
             }
         }
 
+        private void SendFuelButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var fuelData = new FuelData { FuelLevel = Random.Shared.Next(0, 101) }; // Example fuel level
+                var firstClientId = ClientStore.Clients.Skip(0).First().Key;
+                if (firstClientId == null)
+                {
+                    InfoText.Text += "\nNo connected clients to send fuel data.";
+                    return;
+                }
+                bool sent = ClientStore.TrySendJsonToClient(firstClientId, fuelData);
+                InfoText.Text += sent
+                    ? $"\nSent fuel data to {firstClientId}"
+                    : $"\nFailed to send fuel data to {firstClientId}";
+            }
+            catch (Exception ex)
+            {
+                InfoText.Text += $"\nError sending fuel data: {ex.Message}";
+            }
+        }
+
         private void ClearMessagesButton_Click(object sender, RoutedEventArgs e)
         {
             _messageDisplayHandler.ClearMessages();
@@ -185,6 +217,36 @@ namespace QRCodeGenerator
             RaceStartInfo? selectedRace = _raceStartInfos.ElementAtOrDefault(RaceSelector.SelectedIndex);
             RaceNameTextBox.Text = selectedRace?.RaceName ?? string.Empty;
             HeatTextBox.Text = selectedRace?.RaceHeat ?? string.Empty;
+        }
+
+        private void StopRaceTest(object? sender, EventArgs e)
+        {
+            Dispatcher.BeginInvoke(() =>
+            {
+                StartRaceButton.IsEnabled = true;
+            });
+        }
+
+        private void StartRaceButton_Click(object sender, RoutedEventArgs e)
+        {
+            var raceStartMessage = new { Type = "unpauseRace" };
+            foreach (var clientID in ClientStore.Clients.Keys)
+                ClientStore.TrySendJsonToClient(clientID, raceStartMessage);
+            StartRaceButton.IsEnabled = false;
+        }
+
+        private void StartTimerButton_Click(object sender, RoutedEventArgs e)
+        {
+            var raceTimeStart = new RaceTimeStart { StartTime = DateTime.Now };
+            foreach (var clientID in ClientStore.Clients.Keys)
+                ClientStore.TrySendJsonToClient(clientID, raceTimeStart);
+        }
+
+        private void SendNotificationButton_Click(object sender, RoutedEventArgs e)
+        {
+            var notification = new RaceNotification(); 
+            foreach (var clientID in ClientStore.Clients.Keys)
+                ClientStore.TrySendJsonToClient(clientID, notification);
         }
 
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e) 

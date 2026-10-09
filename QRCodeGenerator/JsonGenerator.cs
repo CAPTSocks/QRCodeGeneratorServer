@@ -17,6 +17,7 @@ namespace QRCodeGenerator
         public int LapNumber { get; set; }
         public double LapTimeSeconds { get; set; }
         public double BestLapTimeSeconds { get; set; }
+        public double BehindLeaderSeconds { get; set; }
         public int RacePosition { get; set; }
     }
 
@@ -27,7 +28,28 @@ namespace QRCodeGenerator
         public string RaceName { get; set; } = "DefaultRaceName";
         public DateTime RaceDate { get; set; } = DateTime.Now;
         public string RaceHeat { get; set; } = "DefaultHeat";
+        public string RaceType { get; set; } = "Race";
 
+    }
+
+    public class FuelData : baseJsonStats
+    {
+        public string Type { get; set; } = "fuelData";
+        public int FuelLevel { get; set; } = 0;
+    }
+
+    public class RaceTimeStart : baseJsonStats
+    {
+        public string Type { get; set; } = "startRaceTimer";
+        public DateTime StartTime { get; set; } = DateTime.Now;
+    }
+
+    public class RaceNotification : baseJsonStats
+    {
+        public string Type { get; set; } = "notification";
+        public string Title { get; set; } = "Race coming up.";
+        public string Message { get; set; } = "Your race is coming up next!";
+        public int notificationId { get; set; } = 0;
     }
 
     /// <summary>
@@ -35,7 +57,7 @@ namespace QRCodeGenerator
     /// </summary>
     public static class JsonGenerator
     {
-        private static readonly JsonSerializerOptions Options = new JsonSerializerOptions
+        public static readonly JsonSerializerOptions Options = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = false
