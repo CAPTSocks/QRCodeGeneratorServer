@@ -5,95 +5,304 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:QRCodeGenerator"
         mc:Ignorable="d"
-        Title="QR Code Generator" Height="700" Width="900">
-    <Grid Margin="10" Background="{StaticResource BackgroundBrush}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="200" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+        Title="QR Code Generator"
+        Height="850"
+        Width="1100"
+        MinHeight="650"
+        MinWidth="900"
+        Background="{StaticResource BackgroundBrush}"
+        WindowStartupLocation="CenterScreen">
 
-        <!-- Status Info -->
-        <TextBlock x:Name="InfoText" Grid.Row="0" FontSize="14" TextWrapping="Wrap" Foreground="{StaticResource ForegroundBrush}" />
+    <Window.Resources>
 
-        <!-- Control Buttons -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,10" HorizontalAlignment="Left">
-            <Button x:Name="GenerateButton" Width="157" Height="30" Click="GenerateButton_Click" RenderTransformOrigin="0.5,0.5">
-                <Button.RenderTransform>
-                    <TransformGroup>
-                        <ScaleTransform/>
-                        <SkewTransform AngleY="0.189"/>
-                        <RotateTransform/>
-                        <TranslateTransform Y="0.33"/>
-                    </TransformGroup>
-                </Button.RenderTransform> Generate QR with local IP
-            </Button>
-            <Button x:Name="SendTestButton" Width="157" Height="30" Click="SendTestButton_Click" Margin="10,0,0,0">Send Test to First Client</Button>
-            <Button x:Name="SendLapButton" Width="148" Height="30" Click="SendLapButton_Click" Margin="10,0,0,0">Send Lap to First Client</Button>
-            <Button x:Name="SendFuelButton" Width="147" Height="30" Click="SendFuelButton_Click" Margin="10,0,0,0">Send Fuel to First Client</Button>
-            <Button x:Name="StartRaceButton" Width="107" Height="30" Click="StartRaceButton_Click" Margin="10,0,0,0">Start Race</Button>
-            <Button x:Name="StartTimerButton" Width="107" Height="30" Click="StartTimerButton_Click" Margin="10,0,0,0">Start Timer</Button>
-            <Button x:Name="SendNotificationButton" Width="107" Height="30" Click="SendNotificationButton_Click" Margin="10,0,0,0">Send Notification </Button>
-        </StackPanel>
+        <!-- Consistent styling for action buttons -->
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="MinWidth" Value="115"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="Background" Value="#FF30343B"/>
+            <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
 
-        <!-- Messages Section Header and Clear Button -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Top" Margin="10,112,260,0">
-            <TextBlock Text="Received Messages:" Foreground="{StaticResource ForegroundBrush}" VerticalAlignment="Center" FontWeight="Bold" />
-            <Button x:Name="ClearMessagesButton" Width="100" Height="30" Click="ClearMessagesButton_Click" Margin="10,0,0,0">Clear</Button>
-        </StackPanel>
+        <!-- Consistent section headings -->
+        <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
 
-        <!-- Messages ListBox -->
-        <ListBox Grid.Row="2" x:Name="MessagesListBox" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" Padding="10" Background="{StaticResource SecondaryBackgroundBrush}" Margin="0,147,260,32" Grid.RowSpan="2"/>
+        <!-- Shared panel appearance -->
+        <Style x:Key="PanelStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource SecondaryBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12"/>
+        </Style>
 
-        <!-- QR Code Section Header -->
-        <TextBlock Grid.Row="3" Text="QR Code:" Foreground="{StaticResource ForegroundBrush}" FontWeight="Bold" Margin="0,10,0,5" />
+    </Window.Resources>
 
-        <!-- QR Code Display -->
-        <Border Grid.Row="4" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" Padding="10" Background="{StaticResource SecondaryBackgroundBrush}">
-            <Image x:Name="QrImage" Stretch="None" HorizontalAlignment="Center" VerticalAlignment="Top" />
-        </Border>
-        <Label Content="Connected Clients&#xD;&#xA;" HorizontalAlignment="Left" Margin="688,0,0,0" Grid.Row="2" VerticalAlignment="Top" Width="125"/>
-        <ListBox x:Name="ConnectedClientsBox"  Background="Black" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="688,30,0,32" Grid.Row="2" Grid.RowSpan="2" RenderTransformOrigin="0.5,0.5" >
-            <ListBox.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform/>
-                    <SkewTransform AngleY="0"/>
-                    <RotateTransform/>
-                    <TranslateTransform Y="0"/>
-                </TransformGroup>
-            </ListBox.RenderTransform>
-        </ListBox>
-        <Grid Margin="10,10,0,0" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Top" Width="610">
-            <TextBox x:Name="RaceNameTextBox"  TextWrapping="Wrap" Text="" Margin="10,5,0,52" HorizontalAlignment="Left" Width="200" Style="{StaticResource PlaceholderTextBoxStyle}" Tag="Enter Race Name" Height="30"/>
-            <TextBox x:Name="HeatTextBox" TextWrapping="Wrap" Text="" Margin="228,5,0,52" HorizontalAlignment="Left" Width="200" Style="{StaticResource PlaceholderTextBoxStyle}" Tag="Enter Heat" Height="30"/>
-            <Button x:Name="SendRaceButton" Content="SendRace" HorizontalAlignment="Left" VerticalAlignment="Top" Height="45" Width="152" Margin="143,45,0,0" Click="SendRaceButton_Click" Background="#FF252526">
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <!-- Enabled by default -->
-                        <Setter Property="IsEnabled" Value="True"/>
-                        <Style.Triggers>
-                            <!-- Disable the button if either text box is empty -->
-                            <MultiDataTrigger>
-                                <MultiDataTrigger.Conditions>
-                                    <Condition Binding="{Binding ElementName=RaceNameTextBox, Path=Text}" Value=""/>
-                                </MultiDataTrigger.Conditions>
-                                <Setter Property="IsEnabled" Value="False"/>
-                            </MultiDataTrigger>
+    <Grid>
+        <Grid x:Name="MainLayout"
+              Margin="16"
+              Background="{StaticResource BackgroundBrush}">
 
-                            <MultiDataTrigger>
-                                <MultiDataTrigger.Conditions>
-                                    <Condition Binding="{Binding ElementName=HeatTextBox, Path=Text}" Value=""/>
-                                </MultiDataTrigger.Conditions>
-                                <Setter Property="IsEnabled" Value="False"/>
-                            </MultiDataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
-            </Button>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="220"/>
+            </Grid.RowDefinitions>
+
+            <!-- Server status and action toolbar -->
+            <Border Grid.Row="0"
+                    Style="{StaticResource PanelStyle}"
+                    Margin="0,0,0,12">
+
+                <StackPanel>
+                    <TextBlock x:Name="InfoText"
+                               FontSize="14"
+                               TextWrapping="Wrap"
+                               Foreground="{StaticResource ForegroundBrush}"
+                               Margin="0,0,0,8"/>
+
+                    <WrapPanel>
+                        <Button x:Name="GenerateButton"
+                                Style="{StaticResource ActionButtonStyle}"
+                                Content="Generate QR with local IP"
+                                Click="GenerateButton_Click"
+                                Background="{StaticResource AccentBrush}"/>
+
+                        <Button x:Name="SendTestButton"
+                                Style="{StaticResource ActionButtonStyle}"
+                                Content="Send Test to First Client"
+                                Click="SendTestButton_Click"/>
+
+                        <Button x:Name="SendLapButton"
+                                Style="{StaticResource ActionButtonStyle}"
+                                Content="Send Lap to First Client"
+                                Click="SendLapButton_Click"/>
+
+                        <Button x:Name="SendFuelButton"
+                                Style="{StaticResource ActionButtonStyle}"
+                                Content="Send Fuel to First Client"
+                                Click="SendFuelButton_Click"/>
+
+                        <Button x:Name="StartRaceButton"
+                                Style="{StaticResource ActionButtonStyle}"
+                                Content="Start Race"
+                                Click="StartRaceButton_Click"/>
+
+                        <Button x:Name="StartTimerButton"
+                                Style="{StaticResource ActionButtonStyle}"
+                                Content="Start Timer"
+                                Click="StartTimerButton_Click"/>
+
+                        <Button x:Name="SendNotificationButton"
+                                Style="{StaticResource ActionButtonStyle}"
+                                Content="Send Notification"
+                                Click="SendNotificationButton_Click"/>
+
+                        <Button x:Name="OpenRaceSimulatorButton"
+                                Style="{StaticResource ActionButtonStyle}"
+                                Content="Race Setup"
+                                Click="OpenRaceSimulatorButton_Click"/>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Race controls -->
+            <Border Grid.Row="1"
+                    Style="{StaticResource PanelStyle}"
+                    Margin="0,0,0,12">
+
+                <StackPanel>
+                    <TextBlock Text="Race Controls"
+                               Style="{StaticResource SectionTitleStyle}"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox x:Name="RaceNameTextBox"
+                                 Grid.Column="0"
+                                 Height="36"
+                                 Margin="4"
+                                 Padding="8"
+                                 VerticalContentAlignment="Center"
+                                 Style="{StaticResource PlaceholderTextBoxStyle}"
+                                 Tag="Enter Race Name"/>
+
+                        <TextBox x:Name="HeatTextBox"
+                                 Grid.Column="1"
+                                 Height="36"
+                                 Margin="4"
+                                 Padding="8"
+                                 VerticalContentAlignment="Center"
+                                 Style="{StaticResource PlaceholderTextBoxStyle}"
+                                 Tag="Enter Heat"/>
+
+                        <ComboBox x:Name="RaceSelector"
+                                  Grid.Column="2"
+                                  Width="170"
+                                  Height="36"
+                                  Margin="4"
+                                  VerticalContentAlignment="Center"
+                                  SelectionChanged="RaceSelector_Changed"/>
+
+                        <Button x:Name="SendRaceButton"
+                                Grid.Column="3"
+                                Content="Send Race"
+                                Width="120"
+                                Height="36"
+                                Margin="4"
+                                Padding="10,5"
+                                Background="{StaticResource AccentBrush}"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Click="SendRaceButton_Click">
+
+                            <Button.Style>
+                                <Style TargetType="Button"
+                                       BasedOn="{StaticResource ActionButtonStyle}">
+                                    <Setter Property="IsEnabled" Value="True"/>
+
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Text, ElementName=RaceNameTextBox}"
+                                                     Value="">
+                                            <Setter Property="IsEnabled" Value="False"/>
+                                        </DataTrigger>
+
+                                        <DataTrigger Binding="{Binding Text, ElementName=HeatTextBox}"
+                                                     Value="">
+                                            <Setter Property="IsEnabled" Value="False"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Messages and connected clients -->
+            <Grid Grid.Row="2" Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Received messages -->
+                <Border Grid.Column="0"
+                        Style="{StaticResource PanelStyle}"
+                        Margin="0,0,6,0">
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <DockPanel Grid.Row="0" Margin="0,0,0,10">
+                            <TextBlock Text="Received Messages"
+                                       Style="{StaticResource SectionTitleStyle}"
+                                       VerticalAlignment="Center"
+                                       Margin="0"
+                                       DockPanel.Dock="Left"/>
+
+                            <Button x:Name="ClearMessagesButton"
+                                    Content="Clear Messages"
+                                    Style="{StaticResource ActionButtonStyle}"
+                                    Height="30"
+                                    MinWidth="100"
+                                    Margin="0"
+                                    DockPanel.Dock="Right"
+                                    Click="ClearMessagesButton_Click"/>
+                        </DockPanel>
+
+                        <ListBox x:Name="MessagesListBox"
+                                 Grid.Row="1"
+                                 Padding="8"
+                                 BorderBrush="{StaticResource AccentBrush}"
+                                 BorderThickness="1"
+                                 Background="{StaticResource BackgroundBrush}"
+                                 Foreground="{StaticResource ForegroundBrush}"/>
+                    </Grid>
+                </Border>
+
+                <!-- Connected clients -->
+                <Border Grid.Column="1"
+                        Style="{StaticResource PanelStyle}"
+                        Margin="6,0,0,0">
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Text="Connected Clients"
+                                   Style="{StaticResource SectionTitleStyle}"/>
+
+                        <ListBox x:Name="ConnectedClientsBox"
+                                 Grid.Row="1"
+                                 Padding="8"
+                                 Background="{StaticResource BackgroundBrush}"
+                                 Foreground="{StaticResource ForegroundBrush}"
+                                 BorderBrush="{StaticResource AccentBrush}"
+                                 BorderThickness="1"
+                                 d:ItemsSource="{d:SampleData ItemCount=5}"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- QR code display -->
+            <Border Grid.Row="3"
+                    Style="{StaticResource PanelStyle}">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0"
+                               Text="Server QR Code"
+                               Style="{StaticResource SectionTitleStyle}"/>
+
+                    <Border Grid.Row="1"
+                            BorderBrush="{StaticResource AccentBrush}"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Padding="8">
+
+                        <Image x:Name="QrImage"
+                               Stretch="Uniform"
+                               MaxWidth="180"
+                               MaxHeight="150"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
         </Grid>
-        <ComboBox x:Name="RaceSelector" Margin="444,15,0,0" Grid.Row="2" RenderTransformOrigin="0.475,0.975" SelectionChanged="RaceSelector_Changed" HorizontalAlignment="Left" VerticalAlignment="Top" Height="54" Width="176">
-        </ComboBox>
+
+        <!-- Hosts RaceSimulator or RaceStatus -->
+        <ContentControl x:Name="RacePageHost"
+                        Visibility="Collapsed"
+                        Panel.ZIndex="10"
+                        Background="#FF1E1E1E"/>
     </Grid>
 </Window>

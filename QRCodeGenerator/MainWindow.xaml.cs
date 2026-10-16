@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Windows;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace QRCodeGenerator
 {
@@ -27,7 +28,7 @@ namespace QRCodeGenerator
             _serverManager = new ServerManager(5000);
             _raceManager = new RaceManager();
             _qrCodeService = new QRCodeService();
-             _messageDisplayHandler = new MessageDisplayHandler(MessagesListBox);
+            _messageDisplayHandler = new MessageDisplayHandler(MessagesListBox);
 
             RaceStartInfo raceInfo1 = _raceManager.GetRaceStartInfo();
 
@@ -37,6 +38,8 @@ namespace QRCodeGenerator
             RaceStartInfo raceInfo2 = _raceManager.GetRaceStartInfo();
             raceInfo2.RaceName = "Test Race 2";
             raceInfo2.RaceHeat = "Heat B";
+            raceInfo2.canPauseRace = true;
+            raceInfo2.showFuelBar = true;
 
             RaceStartInfo raceInfo3 = _raceManager.GetRaceStartInfo();
             raceInfo3.RaceName = "Test Race 3";
@@ -57,15 +60,47 @@ namespace QRCodeGenerator
                 RaceSelector.Items.Add(raceInfo.RaceName);
             }
 
-                // Subscribe to events
-                _serverManager.StatusChanged += ServerManager_StatusChanged;
+            // Subscribe to events
+            _serverManager.StatusChanged += ServerManager_StatusChanged;
             ClientStore.MessageReceived += ClientStore_MessageReceived;
             ClientStore.ClientsChanged += ClientStore_ClientsChanged;
 
-            MessengerService messengerService = new MessengerService();
-            messengerService.StopTheRace += StopRaceTest;
+            // MessengerService messengerService = new MessengerService();
+            // messengerService.StopTheRace += StopRaceTest;
             StartRaceButton.IsEnabled = false;
         }
+
+        public void ReturnToMainWindow()
+        {
+            // Hide the race setup/status page.
+            RacePageHost.Visibility = Visibility.Collapsed;
+            RacePageHost.Content = null;
+
+            // Show the main interface again.
+            MainLayout.Visibility = Visibility.Visible;
+        }
+
+        public void NavigateToRaceStatus(int durationMinutes, RaceStartInfo raceInfo)
+        {
+            MainLayout.Visibility = Visibility.Collapsed;
+
+            RacePageHost.Content =
+                new RaceStatus(durationMinutes, raceInfo);
+
+            RacePageHost.Visibility = Visibility.Visible;
+        }
+
+        private void OpenRaceSimulatorButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Hide the main interface.
+            MainLayout.Visibility = Visibility.Collapsed;
+
+            // Display the race setup page.
+            RacePageHost.Content = new RaceSimulator();
+            RacePageHost.Visibility = Visibility.Visible;
+        }
+
+
 
         private void ClientStore_ClientsChanged(object? sender, EventArgs e)
         {
@@ -88,7 +123,7 @@ namespace QRCodeGenerator
                     {
                         InfoText.Text += $"\nRacer found in list: {info} - {racer.RacerFirstName} {racer.RacerLastName}";
                     }
-                   
+
                 }
             });
         }
@@ -175,8 +210,8 @@ namespace QRCodeGenerator
                 }
 
                 bool sent = ClientStore.TrySendJsonToClient(firstClientId, stats);
-                InfoText.Text += sent 
-                    ? $"\nSent lap {stats.LapNumber} to {firstClientId}" 
+                InfoText.Text += sent
+                    ? $"\nSent lap {stats.LapNumber} to {firstClientId}"
                     : $"\nFailed to send lap to {firstClientId}";
             }
             catch (Exception ex)
@@ -238,20 +273,21 @@ namespace QRCodeGenerator
         private void StartTimerButton_Click(object sender, RoutedEventArgs e)
         {
             var raceTimeStart = new RaceTimeStart { StartTime = DateTime.Now };
+            Debug.WriteLine("Race Start Time: " + raceTimeStart.StartTime);
             foreach (var clientID in ClientStore.Clients.Keys)
                 ClientStore.TrySendJsonToClient(clientID, raceTimeStart);
         }
 
         private void SendNotificationButton_Click(object sender, RoutedEventArgs e)
         {
-            var notification = new RaceNotification(); 
+            var notification = new RaceNotification();
             foreach (var clientID in ClientStore.Clients.Keys)
                 ClientStore.TrySendJsonToClient(clientID, notification);
         }
 
-        private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e) 
+        private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
             => _serverManager.StopServer();
 
-       
+
     }
 }

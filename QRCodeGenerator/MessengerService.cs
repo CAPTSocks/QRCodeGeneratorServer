@@ -9,7 +9,7 @@ namespace QRCodeGenerator
     internal class MessengerService
     {
 
-        public event EventHandler? StopTheRace;
+        public event EventHandler<ClientMessageEventArgs>? StopTheRace;
         public MessengerService()
         {
             // Initialize the messenger service
@@ -26,7 +26,7 @@ namespace QRCodeGenerator
             {
                 // Handle the pause race message
                 Debug.WriteLine("Received pause race message from client: " + e.ClientId);
-                StopTheRace?.Invoke(this, EventArgs.Empty);
+                StopTheRace?.Invoke(this, e);
                 // Implement the logic to pause the race here
             }
         }

@@ -18,24 +18,70 @@ namespace QRCodeGenerator
     /// </summary>
     public partial class RaceSimulator : UserControl
     {
+        private int raceTimeMins = 0;
         public RaceSimulator()
         {
             InitializeComponent();
         }
 
-        private void StartRaceButton_Click(object sender, RoutedEventArgs e)
+        private void SetupRaceButton_Click(object sender, RoutedEventArgs e)
         {
-            string name = RaceNameBox.Text;
-            string heat = (HeatBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
-            string length = DurationBox.Text;
-            string unit = (DurationUnitBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+            RaceStartInfo newRace = SetupRace();
+            
+            foreach (var clientID in ClientStore.Clients.Keys)
+                ClientStore.TrySendJsonToClient(clientID, newRace);
+
+            // Get the selected duration and unit.
+            bool isMinuteRace =
+                (DurationUnitBox.SelectedItem as ComboBoxItem)
+                ?.Content?.ToString() == "Minutes";
+
+            if (isMinuteRace &&
+                int.TryParse(DurationBox.Text, out int durationMinutes) &&
+                durationMinutes > 0)
+            {
+
+                var mainWindow = Application.Current.MainWindow as MainWindow;
+                mainWindow?.NavigateToRaceStatus(durationMinutes, newRace);
+            }
+            else if (!isMinuteRace)
+            {
+                MessageBox.Show(
+                    "The countdown timer currently supports minute-based races.",
+                    "Lap-Based Race",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show(
+                    "Please enter a valid race duration in minutes.",
+                    "Invalid Duration",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+
 
             // start the race with name, heat, and length
         }
 
+        private RaceStartInfo SetupRace()
+        {
+            RaceStartInfo newRace = new RaceStartInfo();
+            DateTime raceStartTime = DateTime.Now;
+            newRace.RaceName = RaceNameBox.Text;
+            newRace.RaceHeat = (HeatBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+            newRace.canPauseRace = AllowPausingCheckBox.IsChecked == true;
+            newRace.showFuelBar = IncludeFuelCheckBox.IsChecked == true;
+            string raceTimeMins = DurationBox.Text;
+            newRace.RaceDate = raceStartTime;
+            return newRace; 
+        }
+
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            // close the popup / window
+            var mainWindow = Application.Current.MainWindow as MainWindow;
+            mainWindow?.ReturnToMainWindow();
         }
     }
 }

@@ -29,6 +29,8 @@ namespace QRCodeGenerator
         public DateTime RaceDate { get; set; } = DateTime.Now;
         public string RaceHeat { get; set; } = "DefaultHeat";
         public string RaceType { get; set; } = "Race";
+        public bool showFuelBar { get; set; } = false;
+        public bool canPauseRace { get; set; } = false;
 
     }
 
@@ -42,6 +44,12 @@ namespace QRCodeGenerator
     {
         public string Type { get; set; } = "startRaceTimer";
         public DateTime StartTime { get; set; } = DateTime.Now;
+    }
+
+    public class RaceFinished : baseJsonStats
+    {
+        public string Type { get; set; } = "raceFinished";
+        public DateTime EndTime { get; set; } = DateTime.Now;
     }
 
     public class RaceNotification : baseJsonStats
