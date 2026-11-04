@@ -15,18 +15,34 @@ namespace QRCodeGenerator
         private List<int> racerCurrentLaps = new List<int>();
         private DateTime _lastTimerUpdate;
         private TimeSpan _remainingDuration;
+        private int totalLaps = 0;
+        private int _highestLap = 0;
         private bool _isPaused = false;
         private bool _isFinished = false;
         private bool _hasStarted = false;
+        private bool _isMinuteRace = true;
 
         private RaceManager raceManager;
         private MessengerService messenger;
 
-        public RaceStatus(int durationMinutes, RaceStartInfo raceInfo)
+        public RaceStatus(int durationMinutes, RaceStartInfo raceInfo, bool isMinuteRace)
         {
             InitializeComponent();
 
-            _remainingDuration = TimeSpan.FromMinutes(durationMinutes);
+            _isMinuteRace = isMinuteRace;
+
+            if (isMinuteRace)
+            {
+                _remainingDuration = TimeSpan.FromMinutes(durationMinutes);
+            }
+            else
+            {
+                totalLaps = durationMinutes;
+                LapCountText.Text = $"Laps 0/{totalLaps}";
+                LapCountText.Visibility = Visibility.Visible;
+            }
+
+            
             _lastTimerUpdate = DateTime.Now;
 
             _countdownTimer = new DispatcherTimer
@@ -80,9 +96,18 @@ namespace QRCodeGenerator
             DateTime now = DateTime.Now;
 
             // Subtract only the time elapsed since the last update.
-            TimeSpan elapsed = now - _lastTimerUpdate;
-            _remainingDuration -= elapsed;
-            _lastTimerUpdate = now;
+            if (_isMinuteRace)
+            {
+                TimeSpan elapsed = now - _lastTimerUpdate;
+                _remainingDuration -= elapsed;
+                _lastTimerUpdate = now;
+            }
+            else
+            {
+                TimeSpan elapsed = now - _lastTimerUpdate;
+                _remainingDuration += elapsed;
+                _lastTimerUpdate = now;
+            }
 
             if (_remainingDuration < TimeSpan.Zero)
                 _remainingDuration = TimeSpan.Zero;
@@ -125,19 +150,59 @@ namespace QRCodeGenerator
             {
                 return;
             }
-
+           
             Random rand = new Random();
             Debug.WriteLine("Function called");
             int randomClient = rand.Next(0, clientIds.Length);
             var newLap = CreateLap();
             racerCurrentLaps[randomClient]++;
             newLap.LapNumber = racerCurrentLaps[randomClient];
+            CheckHighestLap();
+            newLap.LapLeaderCurrentLap = _highestLap;
 
             LatestEventDetails.Text = "Sent lap " + newLap.LapNumber.ToString() + " to " + ClientStore.ClientInfos[clientIds[randomClient]].FirstName.ToString();
+            
             var ClientIDToSend = clientIds[randomClient];
             ClientStore.TrySendJsonToClient(ClientIDToSend, newLap);
 
+            //Send update to other clinets about the lap leader's current lap
+            var lapLeaderUpdate = new LapLeaderUpdate
+            {
+                LapLeaderCurrentLap = _highestLap
+            };
+            foreach (var clientID in ClientStore.Clients.Keys)
+            {
+                if (clientID != ClientIDToSend)
+                {
+                    ClientStore.TrySendJsonToClient(clientID, lapLeaderUpdate);
+                }
+            }
 
+
+        }
+
+        private void CheckHighestLap()
+        {
+            _highestLap = 0;
+            foreach (var lap in racerCurrentLaps)
+            {
+                if (lap > _highestLap)
+                {
+                    _highestLap = lap;
+                }
+            }
+            LapCountText.Text = $"Laps {_highestLap}/{totalLaps}";
+            if (_highestLap >= totalLaps)
+            {
+                _isFinished = true;
+                _countdownTimer.Stop();
+                _lapTimer.Stop();
+                RaceStateText.Text = "Race finished";
+                LatestEventTitle.Text = "Race completed!";
+                LatestEventDetails.Text =
+                    "The race has reached the total number of laps.";
+                EndRace();
+            }       
         }
 
         private void EndRace()

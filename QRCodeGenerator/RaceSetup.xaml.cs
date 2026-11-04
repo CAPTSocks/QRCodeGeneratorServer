@@ -16,10 +16,10 @@ namespace QRCodeGenerator
     /// <summary>
     /// Interaction logic for RaceSimulator.xaml
     /// </summary>
-    public partial class RaceSimulator : UserControl
+    public partial class RaceSetup : UserControl
     {
         private int raceTimeMins = 0;
-        public RaceSimulator()
+        public RaceSetup()
         {
             InitializeComponent();
         }
@@ -36,21 +36,12 @@ namespace QRCodeGenerator
                 (DurationUnitBox.SelectedItem as ComboBoxItem)
                 ?.Content?.ToString() == "Minutes";
 
-            if (isMinuteRace &&
-                int.TryParse(DurationBox.Text, out int durationMinutes) &&
+            if (int.TryParse(DurationBox.Text, out int durationMinutes) &&
                 durationMinutes > 0)
             {
 
                 var mainWindow = Application.Current.MainWindow as MainWindow;
-                mainWindow?.NavigateToRaceStatus(durationMinutes, newRace);
-            }
-            else if (!isMinuteRace)
-            {
-                MessageBox.Show(
-                    "The countdown timer currently supports minute-based races.",
-                    "Lap-Based Race",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                mainWindow?.NavigateToRaceStatus(durationMinutes, newRace, isMinuteRace);
             }
             else
             {
@@ -75,6 +66,27 @@ namespace QRCodeGenerator
             newRace.showFuelBar = IncludeFuelCheckBox.IsChecked == true;
             string raceTimeMins = DurationBox.Text;
             newRace.RaceDate = raceStartTime;
+
+            if (int.TryParse(DurationBox.Text, out int durationMinutes))
+            {
+                newRace.RaceLength = durationMinutes;
+            }
+
+            if (DurationUnitBox.Text == "Minutes")
+            {
+                newRace.IsMinuteRace = true;
+                
+            }
+            else
+            {
+                newRace.IsMinuteRace = false;
+            }
+
+            if (PracticeCheckbox.IsChecked == true)
+            {
+                newRace.RaceType = "Practice";
+            }
+
             return newRace; 
         }
 

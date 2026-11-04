@@ -80,12 +80,12 @@ namespace QRCodeGenerator
             MainLayout.Visibility = Visibility.Visible;
         }
 
-        public void NavigateToRaceStatus(int durationMinutes, RaceStartInfo raceInfo)
+        public void NavigateToRaceStatus(int durationMinutes, RaceStartInfo raceInfo, bool isMinuteRace)
         {
             MainLayout.Visibility = Visibility.Collapsed;
 
             RacePageHost.Content =
-                new RaceStatus(durationMinutes, raceInfo);
+                new RaceStatus(durationMinutes, raceInfo, isMinuteRace);
 
             RacePageHost.Visibility = Visibility.Visible;
         }
@@ -96,7 +96,7 @@ namespace QRCodeGenerator
             MainLayout.Visibility = Visibility.Collapsed;
 
             // Display the race setup page.
-            RacePageHost.Content = new RaceSimulator();
+            RacePageHost.Content = new RaceSetup();
             RacePageHost.Visibility = Visibility.Visible;
         }
 

@@ -1,4 +1,5 @@
 using System;
+using System.CodeDom;
 using System.Text.Json;
 
 namespace QRCodeGenerator
@@ -19,6 +20,13 @@ namespace QRCodeGenerator
         public double BestLapTimeSeconds { get; set; }
         public double BehindLeaderSeconds { get; set; }
         public int RacePosition { get; set; }
+        public int LapLeaderCurrentLap { get; set; }
+    }
+
+    public class LapLeaderUpdate : baseJsonStats
+    {
+        public string Type { get; set; } = "lapLeaderUpdate";
+        public int LapLeaderCurrentLap { get; set; }
     }
 
     public class RaceStartInfo : baseJsonStats
@@ -31,6 +39,8 @@ namespace QRCodeGenerator
         public string RaceType { get; set; } = "Race";
         public bool showFuelBar { get; set; } = false;
         public bool canPauseRace { get; set; } = false;
+        public bool IsMinuteRace { get; set; } = true;
+        public int RaceLength { get; set; } = 0;
 
     }
 
@@ -50,6 +60,7 @@ namespace QRCodeGenerator
     {
         public string Type { get; set; } = "raceFinished";
         public DateTime EndTime { get; set; } = DateTime.Now;
+        public int ElapsedRaceTime { get; set; } = 0;
     }
 
     public class RaceNotification : baseJsonStats

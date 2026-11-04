@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:QRCodeGenerator"
              mc:Ignorable="d"
-             d:DesignHeight="600"
+             d:DesignHeight="650"
              d:DesignWidth="800"
              Background="#1E1E1E">
 
@@ -59,8 +59,8 @@
             </Setter>
         </Style>
     </UserControl.Resources>
-    
-    
+
+
 
     <Grid Margin="32,32,32,0">
         <Border Background="#252526"
@@ -104,6 +104,15 @@
                                    FontFamily="Consolas"
                                    HorizontalAlignment="Center"
                                    Foreground="#E85D04" />
+
+                        <TextBlock x:Name="LapCountText"
+                                    Text="Laps 0/0"
+                                    FontSize="56"
+                                    FontWeight="Bold"
+                                    FontFamily="Consolas"
+                                    HorizontalAlignment="Center"
+                                    Foreground="#E85D04"
+                                    Visibility="Collapsed"/>
 
                         <TextBlock x:Name="RaceStateText"
                                    Text="Waiting to start"
