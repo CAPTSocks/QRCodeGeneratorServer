@@ -32,7 +32,7 @@ namespace QRCodeGenerator
     public class RaceStartInfo : baseJsonStats
     {
         public string Type { get; set; } = "raceInfo";
-        public string RaceID { get; set; } = "";
+        public string RaceID { get; set; } = Guid.NewGuid().ToString();
         public string RaceName { get; set; } = "DefaultRaceName";
         public DateTime RaceDate { get; set; } = DateTime.Now;
         public string RaceHeat { get; set; } = "DefaultHeat";
@@ -60,7 +60,7 @@ namespace QRCodeGenerator
     {
         public string Type { get; set; } = "raceFinished";
         public DateTime EndTime { get; set; } = DateTime.Now;
-        public int ElapsedRaceTime { get; set; } = 0;
+        public long ElapsedRaceTime { get; set; } = 0;
     }
 
     public class RaceNotification : baseJsonStats

@@ -12,6 +12,7 @@ namespace QRCodeGenerator
         private readonly TimeSpan _raceDuration;
         private readonly DispatcherTimer _countdownTimer;
         private readonly DispatcherTimer _lapTimer;
+        private readonly Stopwatch _raceStopwatch = new Stopwatch();
         private List<int> racerCurrentLaps = new List<int>();
         private DateTime _lastTimerUpdate;
         private TimeSpan _remainingDuration;
@@ -150,14 +151,17 @@ namespace QRCodeGenerator
             {
                 return;
             }
-           
+
             Random rand = new Random();
             Debug.WriteLine("Function called");
             int randomClient = rand.Next(0, clientIds.Length);
             var newLap = CreateLap();
             racerCurrentLaps[randomClient]++;
             newLap.LapNumber = racerCurrentLaps[randomClient];
-            CheckHighestLap();
+            if (!_isMinuteRace)
+            {
+                CheckHighestLap();
+            }
             newLap.LapLeaderCurrentLap = _highestLap;
 
             LatestEventDetails.Text = "Sent lap " + newLap.LapNumber.ToString() + " to " + ClientStore.ClientInfos[clientIds[randomClient]].FirstName.ToString();
@@ -207,7 +211,12 @@ namespace QRCodeGenerator
 
         private void EndRace()
         {
+            _raceStopwatch.Stop();
+
+            long raceTimeMiliseconds = _raceStopwatch.ElapsedMilliseconds;
             RaceFinished raceFinMessage = new RaceFinished();
+            raceFinMessage.ElapsedRaceTime = raceTimeMiliseconds;
+
             foreach (var clientID in ClientStore.Clients.Keys)
             {
                 ClientStore.TrySendJsonToClient(clientID, raceFinMessage);
@@ -222,6 +231,7 @@ namespace QRCodeGenerator
                 if (_isPaused || _isFinished)
                     return;
 
+                
                 // Account for time elapsed since the last countdown tick.
                 DateTime now = DateTime.Now;
                 _remainingDuration -= now - _lastTimerUpdate;
@@ -234,6 +244,7 @@ namespace QRCodeGenerator
 
                 _countdownTimer.Stop();
                 _lapTimer.Stop();
+                _raceStopwatch.Stop();
 
                 string pauserName = "Unknown racer";
 
@@ -280,6 +291,7 @@ namespace QRCodeGenerator
                     return;
 
                 _isPaused = false;
+                _raceStopwatch.Start();
                 _lastTimerUpdate = DateTime.Now;
 
                 _countdownTimer.Start();
@@ -316,6 +328,8 @@ namespace QRCodeGenerator
 
             _hasStarted = true;
             _lastTimerUpdate = DateTime.Now;
+
+            _raceStopwatch.Start(); 
 
             // Start the countdown and simulated lap timers.
             _countdownTimer.Start();
