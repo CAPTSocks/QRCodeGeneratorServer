@@ -209,20 +209,30 @@ namespace QRCodeGenerator
             }       
         }
 
+
         private void EndRace()
         {
             _raceStopwatch.Stop();
 
             long raceTimeMiliseconds = _raceStopwatch.ElapsedMilliseconds;
+
             RaceFinished raceFinMessage = new RaceFinished();
             raceFinMessage.ElapsedRaceTime = raceTimeMiliseconds;
 
             foreach (var clientID in ClientStore.Clients.Keys)
             {
-                ClientStore.TrySendJsonToClient(clientID, raceFinMessage);
+                ClientStore.TrySendJsonToClient(
+                    clientID, raceFinMessage);
             }
 
+            // Hide the old race controls.
+            StartRaceBorder.Visibility = Visibility.Collapsed;
+            ResumeRaceBorder.Visibility = Visibility.Collapsed;
+
+            // Show the return button.
+            ReturnToSetupBorder.Visibility = Visibility.Visible;
         }
+
 
         private void PauseRace(object? sender, ClientMessageEventArgs e)
         {
@@ -318,6 +328,14 @@ namespace QRCodeGenerator
         private void ResumeRace_Click(object sender, RoutedEventArgs e)
         {
             ResumeRace(); 
+        }
+
+        private void ReturnToSetup_Click(
+            object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            var mainWindow = Application.Current.MainWindow as MainWindow;
+
+            mainWindow?.ReturnToMainWindow();
         }
 
         private void StartRaceButton_Click(object sender, RoutedEventArgs e)

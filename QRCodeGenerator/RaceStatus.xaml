@@ -170,14 +170,13 @@
                                 Margin="10,0,0,0">Resume Race</Button>
                     </StackPanel>
                 </Border>
-
                 <Border x:Name="StartRaceBorder"
                         Background="#1E1E1E"
                         BorderBrush="#3F3F46"
                         BorderThickness="1"
                         CornerRadius="6"
                         Padding="16"
-                        MinHeight="120">
+                        MinHeight="60">
 
                     <StackPanel>
                         <Button x:Name="StartRaceButton"
@@ -188,6 +187,23 @@
                                 Content="Start Race" />
                     </StackPanel>
                 </Border>
+
+
+                <Border x:Name="ReturnToSetupBorder"
+Visibility="Collapsed"
+Background="#E85D04"
+CornerRadius="6"
+Padding="16,10"
+Cursor="Hand"
+MouseLeftButtonUp="ReturnToSetup_Click">
+
+                    <TextBlock Text="Return to Race Setup"
+       Foreground="White"
+       FontSize="16"
+       FontWeight="SemiBold"
+       HorizontalAlignment="Center"/>
+                </Border>
+
 
 
 

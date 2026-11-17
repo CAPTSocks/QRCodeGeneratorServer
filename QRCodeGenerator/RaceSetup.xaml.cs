@@ -1,99 +1,189 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿
+using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace QRCodeGenerator
 {
-    /// <summary>
-    /// Interaction logic for RaceSimulator.xaml
-    /// </summary>
     public partial class RaceSetup : UserControl
     {
-        private int raceTimeMins = 0;
         public RaceSetup()
         {
             InitializeComponent();
+
+            Loaded += RaceSetup_Loaded;
+            Unloaded += RaceSetup_Unloaded;
         }
 
-        private void SetupRaceButton_Click(object sender, RoutedEventArgs e)
+        private MainWindow? GetMainWindow()
         {
-            RaceStartInfo newRace = SetupRace();
-            
-            foreach (var clientID in ClientStore.Clients.Keys)
-                ClientStore.TrySendJsonToClient(clientID, newRace);
+            return Application.Current.MainWindow as MainWindow;
+        }
 
-            // Get the selected duration and unit.
+        // Subscribe while this page is displayed.
+        private void RaceSetup_Loaded(
+            object sender, RoutedEventArgs e)
+        {
+            ClientStore.ClientsChanged -= ClientStore_ClientsChanged;
+            ClientStore.ClientsChanged += ClientStore_ClientsChanged;
+
+            RefreshConnectedClients();
+
+            if (GetMainWindow()?.IsServerRunning == true)
+            {
+                ServerStatusText.Text = "Server Running";
+                ServerStatusText.Foreground =
+                    System.Windows.Media.Brushes.LightGreen;
+
+                StartServerButton.IsEnabled = false;
+                SetupRaceButton.IsEnabled = true;
+            }
+        }
+
+        private void RaceSetup_Unloaded(
+            object sender, RoutedEventArgs e)
+        {
+            ClientStore.ClientsChanged -= ClientStore_ClientsChanged;
+        }
+
+        // Start the WebSocket server and display its QR code.
+        private void StartServerButton_Click(
+            object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var mainWindow = GetMainWindow();
+
+                if (mainWindow == null)
+                    return;
+
+                var connection = mainWindow.StartServer();
+
+                QrImage.Source = connection.QrCode;
+
+                ServerAddressText.Text = connection.Url;
+
+                ServerStatusText.Text = "Server Running";
+                ServerStatusText.Foreground =
+                    System.Windows.Media.Brushes.LightGreen;
+
+                StartServerButton.IsEnabled = false;
+                SetupRaceButton.IsEnabled = true;
+
+                RefreshConnectedClients();
+            }
+            catch (Exception ex)
+            {
+                ServerStatusText.Text = "Server Error";
+                ServerStatusText.Foreground =
+                    System.Windows.Media.Brushes.IndianRed;
+
+                MessageBox.Show(
+                    $"Failed to start server:\n{ex.Message}",
+                    "Server Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        // Update whenever mobile clients connect or disconnect.
+        private void ClientStore_ClientsChanged(
+            object? sender, EventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(
+                RefreshConnectedClients));
+        }
+
+        private void RefreshConnectedClients()
+        {
+            ConnectedClientsBox.Items.Clear();
+
+            foreach (var info in ClientStore.ClientInfos.Values)
+            {
+                ConnectedClientsBox.Items.Add(info.ToString());
+            }
+
+            int count = ClientStore.ClientInfos.Count;
+
+            ConnectedClientsTitle.Text =
+                $"Connected Racers ({count})";
+        }
+
+        // Validate race settings, send race information,
+        // and navigate to RaceStatus.
+        private void SetupRaceButton_Click(
+            object sender, RoutedEventArgs e)
+        {
+            var mainWindow = GetMainWindow();
+
+            if (mainWindow?.IsServerRunning != true)
+            {
+                MessageBox.Show(
+                    "Please start the server first.",
+                    "Server Offline",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            string raceName = RaceNameBox.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(raceName))
+            {
+                MessageBox.Show(
+                    "Please enter a race name.",
+                    "Invalid Race Name",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!int.TryParse(DurationBox.Text, out int raceLength)
+                || raceLength <= 0)
+            {
+                MessageBox.Show(
+                    "Please enter a valid positive race length.",
+                    "Invalid Race Length",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             bool isMinuteRace =
                 (DurationUnitBox.SelectedItem as ComboBoxItem)
                 ?.Content?.ToString() == "Minutes";
 
-            if (int.TryParse(DurationBox.Text, out int durationMinutes) &&
-                durationMinutes > 0)
+            string raceHeat =
+                (HeatBox.SelectedItem as ComboBoxItem)
+                ?.Content?.ToString() ?? "Heat 1";
+
+            // Build the race information.
+            RaceStartInfo newRace = new RaceStartInfo
             {
+                RaceName = raceName,
+                RaceHeat = raceHeat,
+                RaceDate = DateTime.Now,
+                RaceLength = raceLength,
+                IsMinuteRace = isMinuteRace,
+                RaceType = PracticeCheckbox.IsChecked == true
+                    ? "Practice"
+                    : "Race",
+                canPauseRace = AllowPausingCheckBox.IsChecked == true,
+                showFuelBar = IncludeFuelCheckBox.IsChecked == true
+            };
 
-                var mainWindow = Application.Current.MainWindow as MainWindow;
-                mainWindow?.NavigateToRaceStatus(durationMinutes, newRace, isMinuteRace);
-            }
-            else
+            // Send the race information to all connected phones.
+            foreach (var clientID in ClientStore.Clients.Keys)
             {
-                MessageBox.Show(
-                    "Please enter a valid race duration in minutes.",
-                    "Invalid Duration",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-            }
-
-
-            // start the race with name, heat, and length
-        }
-
-        private RaceStartInfo SetupRace()
-        {
-            RaceStartInfo newRace = new RaceStartInfo();
-            DateTime raceStartTime = DateTime.Now;
-            newRace.RaceName = RaceNameBox.Text;
-            newRace.RaceHeat = (HeatBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
-            newRace.canPauseRace = AllowPausingCheckBox.IsChecked == true;
-            newRace.showFuelBar = IncludeFuelCheckBox.IsChecked == true;
-            string raceTimeMins = DurationBox.Text;
-            newRace.RaceDate = raceStartTime;
-
-            if (int.TryParse(DurationBox.Text, out int durationMinutes))
-            {
-                newRace.RaceLength = durationMinutes;
+                ClientStore.TrySendJsonToClient(
+                    clientID, newRace);
             }
 
-            if (DurationUnitBox.Text == "Minutes")
-            {
-                newRace.IsMinuteRace = true;
-                
-            }
-            else
-            {
-                newRace.IsMinuteRace = false;
-            }
-
-            if (PracticeCheckbox.IsChecked == true)
-            {
-                newRace.RaceType = "Practice";
-            }
-
-            return newRace; 
-        }
-
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            var mainWindow = Application.Current.MainWindow as MainWindow;
-            mainWindow?.ReturnToMainWindow();
+            // Open the existing race status screen.
+            mainWindow.NavigateToRaceStatus(
+                raceLength,
+                newRace,
+                isMinuteRace);
         }
     }
 }

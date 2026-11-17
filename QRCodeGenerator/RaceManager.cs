@@ -26,8 +26,8 @@ namespace QRCodeGenerator
         /// </summary>
         public TimeSpan SimulateLapTime()
         {
-            const double minSeconds = 60.0;
-            const double maxSeconds = 90.0;
+            const double minSeconds = 4.0;
+            const double maxSeconds = 10.0;
             double lapSeconds = minSeconds + _rnd.NextDouble() * (maxSeconds - minSeconds);
             return TimeSpan.FromSeconds(lapSeconds);
         }
