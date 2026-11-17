@@ -50,6 +50,8 @@ namespace QRCodeGenerator
             ImageSource qrCode =
                 _qrCodeService.GenerateQRCode(url);
 
+            Clipboard.SetText(url);
+
             return (url, qrCode);
         }
 
