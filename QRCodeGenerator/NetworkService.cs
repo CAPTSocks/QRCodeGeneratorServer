@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 
 namespace QRCodeGenerator
@@ -15,18 +16,48 @@ namespace QRCodeGenerator
         /// <returns>IPv4 address or null if not found.</returns>
         public string? GetLocalIPv4()
         {
-            try
+            foreach (var adapter in NetworkInterface.GetAllNetworkInterfaces())
             {
-                foreach (var networkInterface in Dns.GetHostEntry(Dns.GetHostName()).AddressList)
+                if (adapter.OperationalStatus != OperationalStatus.Up)
+                    continue;
+
+                if (adapter.NetworkInterfaceType != NetworkInterfaceType.Ethernet &&
+                    adapter.NetworkInterfaceType != NetworkInterfaceType.Wireless80211)
+                    continue;
+
+                try
                 {
-                    if (networkInterface.AddressFamily == AddressFamily.InterNetwork)
-                        return networkInterface.ToString();
+                    var properties = adapter.GetIPProperties();
+
+                    foreach (var address in properties.UnicastAddresses)
+                    {
+                        if (address.Address.AddressFamily !=
+                            AddressFamily.InterNetwork)
+                            continue;
+
+                        string ip = address.Address.ToString();
+
+                        if (IPAddress.IsLoopback(address.Address))
+                            continue;
+
+                        if (ip.StartsWith("169.254."))
+                            continue;
+
+                        return ip;
+                    }
+                }
+                catch (NetworkInformationException)
+                {
+                    // Skip adapters whose network properties cannot be read.
+                    continue;
+                }
+                catch (SocketException)
+                {
+                    // Skip adapters with unsupported network configurations.
+                    continue;
                 }
             }
-            catch
-            {
-                // Ignore DNS resolution errors
-            }
+
             return null;
         }
     }
