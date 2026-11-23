@@ -51,6 +51,36 @@ namespace QRCodeGenerator
             };
         }
 
+        public LapStats CreateLapForDriver(
+            int lapNumber,
+            double previousBestLapSeconds,
+            int racePosition = 1)
+        {
+            double lapTime = SimulateLapTime().TotalSeconds;
+
+            double bestLap =
+                previousBestLapSeconds <= 0
+                    ? lapTime
+                    : Math.Min(previousBestLapSeconds, lapTime);
+
+            // Simulate a gap from the race leader.
+            // The leader is always 0 seconds behind.
+            double behindLeader = racePosition == 1
+                ? 0
+                : Math.Round(_rnd.NextDouble() * 5.0, 3);
+
+            return new LapStats
+            {
+                LapNumber = lapNumber,
+                LapTimeSeconds = lapTime,
+                BestLapTimeSeconds = bestLap,
+                BehindLeaderSeconds = behindLeader,
+                RacePosition = racePosition
+            };
+        }
+
+
+
         public RaceStartInfo GetRaceStartInfo()
         {
             return new RaceStartInfo

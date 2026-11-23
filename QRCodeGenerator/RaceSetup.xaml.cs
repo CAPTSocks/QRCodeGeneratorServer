@@ -94,20 +94,40 @@ namespace QRCodeGenerator
                 RefreshConnectedClients));
         }
 
+
         private void RefreshConnectedClients()
         {
             ConnectedClientsBox.Items.Clear();
 
-            foreach (var info in ClientStore.ClientInfos.Values)
+            foreach (var entry in ClientStore.ClientInfos)
             {
-                ConnectedClientsBox.Items.Add(info.ToString());
+                string clientId = entry.Key;
+                ClientInfo info = entry.Value;
+
+                bool isConnected =
+                    ClientStore.Clients.ContainsKey(clientId);
+
+                string status = isConnected
+                    ? "Connected"
+                    : "Disconnected";
+
+                string name =
+                    $"{info.FirstName} {info.LastName}".Trim();
+
+                if (string.IsNullOrEmpty(name))
+                    name = "Unregistered driver";
+
+                ConnectedClientsBox.Items.Add(
+                    $"{name} - {status}");
             }
 
-            int count = ClientStore.ClientInfos.Count;
+            int connectedCount = ClientStore.Clients.Count;
+            int registeredCount = ClientStore.ClientInfos.Count;
 
             ConnectedClientsTitle.Text =
-                $"Connected Racers ({count})";
+                $"Connected Racers ({connectedCount}/{registeredCount})";
         }
+
 
         // Validate race settings, send race information,
         // and navigate to RaceStatus.
@@ -171,6 +191,13 @@ namespace QRCodeGenerator
                 canPauseRace = AllowPausingCheckBox.IsChecked == true,
                 showFuelBar = IncludeFuelCheckBox.IsChecked == true
             };
+
+            // Create the authoritative race session before sending
+            // race information to the connected phones.
+            RaceSessionStore.Current = new RaceSession(
+                newRace,
+                ClientStore.ClientInfos.Keys
+            );
 
             // Send the race information to all connected phones.
             foreach (var clientID in ClientStore.Clients.Keys)

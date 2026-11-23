@@ -13,7 +13,8 @@ namespace QRCodeGenerator
         private readonly DispatcherTimer _countdownTimer;
         private readonly DispatcherTimer _lapTimer;
         private readonly Stopwatch _raceStopwatch = new Stopwatch();
-        private List<int> racerCurrentLaps = new List<int>();
+        private readonly RaceSession _session;
+        private readonly Random _random = new Random();
         private DateTime _lastTimerUpdate;
         private TimeSpan _remainingDuration;
         private int totalLaps = 0;
@@ -43,7 +44,7 @@ namespace QRCodeGenerator
                 LapCountText.Visibility = Visibility.Visible;
             }
 
-            
+
             _lastTimerUpdate = DateTime.Now;
 
             _countdownTimer = new DispatcherTimer
@@ -63,8 +64,7 @@ namespace QRCodeGenerator
             Loaded += RaceStatus_Loaded;
             Unloaded += RaceStatus_Unloaded;
 
-            foreach (var clientID in ClientStore.Clients)
-                racerCurrentLaps.Add(0);
+            _session = RaceSessionStore.Current ?? throw new InvalidOperationException("Cannot start a race without an active session");
 
             raceManager = new RaceManager();
             messenger = new MessengerService();
@@ -141,73 +141,125 @@ namespace QRCodeGenerator
             SendRandomRacerLap();
         }
 
+
         private void SendRandomRacerLap()
         {
-            // TODO: Add your logic to select a random connected racer
-            // and send them a lap.
-            var clientIds = ClientStore.Clients.Keys.ToArray();
-
-            if (clientIds.Length == 0)
-            {
+            if (_isPaused || _isFinished || !_hasStarted)
                 return;
+
+            // Select from race participants, NOT connected phones.
+            string[] participantIds = _session.GetParticipantIds();
+
+            if (participantIds.Length == 0)
+                return;
+
+            string selectedClientId =
+                participantIds[_random.Next(participantIds.Length)];
+
+            // Retrieve this driver's own statistics.
+            int nextLapNumber =
+                _session.GetLapCount(selectedClientId) + 1;
+
+            double previousBest =
+                _session.GetBestLapSeconds(selectedClientId);
+
+            // Generate a lap for this particular driver.
+            // Simulate a race position for this test server.
+            int simulatedPosition = _random.Next(
+                1,
+                participantIds.Length + 1
+            );
+
+            LapStats newLap = raceManager.CreateLapForDriver(
+                nextLapNumber,
+                previousBest,
+                simulatedPosition
+            );
+
+            // Include the new lap when determining the leader.
+            int highestLap = Math.Max(
+                _session.GetHighestLap(),
+                nextLapNumber
+            );
+
+            newLap.LapLeaderCurrentLap = highestLap;
+
+            // Store the lap BEFORE attempting network delivery.
+            if (!_session.RecordLap(selectedClientId, newLap))
+                return;
+
+            _highestLap = highestLap;
+
+            string driverName = selectedClientId;
+
+            if (ClientStore.ClientInfos.TryGetValue(
+                selectedClientId, out var clientInfo))
+            {
+                driverName = clientInfo.FirstName;
             }
 
-            Random rand = new Random();
-            Debug.WriteLine("Function called");
-            int randomClient = rand.Next(0, clientIds.Length);
-            var newLap = CreateLap();
-            racerCurrentLaps[randomClient]++;
-            newLap.LapNumber = racerCurrentLaps[randomClient];
+            LatestEventTitle.Text = "New lap recorded";
+            LatestEventDetails.Text =
+                $"Lap {newLap.LapNumber} recorded for {driverName}.";
+
+            // Delivery is optional. Recording is not.
+            if (ClientStore.Clients.ContainsKey(selectedClientId))
+            {
+                ClientStore.TrySendJsonToClient(
+                    selectedClientId,
+                    newLap
+                );
+            }
+
+            // Keep other connected racers informed.
+            var leaderUpdate = new LapLeaderUpdate
+            {
+                LapLeaderCurrentLap = _highestLap
+            };
+
+            foreach (string clientId in ClientStore.Clients.Keys)
+            {
+                if (clientId != selectedClientId)
+                {
+                    ClientStore.TrySendJsonToClient(
+                        clientId,
+                        leaderUpdate
+                    );
+                }
+            }
+
+            // Check race completion after recording the lap.
             if (!_isMinuteRace)
             {
                 CheckHighestLap();
             }
-            newLap.LapLeaderCurrentLap = _highestLap;
-
-            LatestEventDetails.Text = "Sent lap " + newLap.LapNumber.ToString() + " to " + ClientStore.ClientInfos[clientIds[randomClient]].FirstName.ToString();
-            
-            var ClientIDToSend = clientIds[randomClient];
-            ClientStore.TrySendJsonToClient(ClientIDToSend, newLap);
-
-            //Send update to other clinets about the lap leader's current lap
-            var lapLeaderUpdate = new LapLeaderUpdate
-            {
-                LapLeaderCurrentLap = _highestLap
-            };
-            foreach (var clientID in ClientStore.Clients.Keys)
-            {
-                if (clientID != ClientIDToSend)
-                {
-                    ClientStore.TrySendJsonToClient(clientID, lapLeaderUpdate);
-                }
-            }
-
-
         }
+
+
 
         private void CheckHighestLap()
         {
-            _highestLap = 0;
-            foreach (var lap in racerCurrentLaps)
-            {
-                if (lap > _highestLap)
-                {
-                    _highestLap = lap;
-                }
-            }
-            LapCountText.Text = $"Laps {_highestLap}/{totalLaps}";
-            if (_highestLap >= totalLaps)
+            _highestLap = _session.GetHighestLap();
+
+            LapCountText.Text =
+                $"Laps {_highestLap}/{totalLaps}";
+
+            if (_highestLap >= totalLaps && !_isFinished)
             {
                 _isFinished = true;
+
                 _countdownTimer.Stop();
                 _lapTimer.Stop();
+
                 RaceStateText.Text = "Race finished";
                 LatestEventTitle.Text = "Race completed!";
                 LatestEventDetails.Text =
                     "The race has reached the total number of laps.";
+
                 EndRace();
-            }       
+            }
         }
+
 
 
         private void EndRace()
@@ -215,6 +267,11 @@ namespace QRCodeGenerator
             _raceStopwatch.Stop();
 
             long raceTimeMiliseconds = _raceStopwatch.ElapsedMilliseconds;
+
+            _session.SetStatus(
+    RaceSessionStatus.Finished,
+    raceTimeMiliseconds
+);
 
             RaceFinished raceFinMessage = new RaceFinished();
             raceFinMessage.ElapsedRaceTime = raceTimeMiliseconds;
@@ -241,7 +298,7 @@ namespace QRCodeGenerator
                 if (_isPaused || _isFinished)
                     return;
 
-                
+
                 // Account for time elapsed since the last countdown tick.
                 DateTime now = DateTime.Now;
                 _remainingDuration -= now - _lastTimerUpdate;
@@ -255,6 +312,11 @@ namespace QRCodeGenerator
                 _countdownTimer.Stop();
                 _lapTimer.Stop();
                 _raceStopwatch.Stop();
+
+                _session.SetStatus(
+    RaceSessionStatus.Paused,
+    _raceStopwatch.ElapsedMilliseconds
+);
 
                 string pauserName = "Unknown racer";
 
@@ -302,6 +364,11 @@ namespace QRCodeGenerator
 
                 _isPaused = false;
                 _raceStopwatch.Start();
+
+                _session.SetStatus(
+    RaceSessionStatus.Running,
+    _raceStopwatch.ElapsedMilliseconds
+);
                 _lastTimerUpdate = DateTime.Now;
 
                 _countdownTimer.Start();
@@ -321,13 +388,13 @@ namespace QRCodeGenerator
             var raceStartMessage = new { Type = "unpauseRace" };
             foreach (var clientID in ClientStore.Clients.Keys)
             {
-                    ClientStore.TrySendJsonToClient(clientID, raceStartMessage);
+                ClientStore.TrySendJsonToClient(clientID, raceStartMessage);
             }
         }
 
         private void ResumeRace_Click(object sender, RoutedEventArgs e)
         {
-            ResumeRace(); 
+            ResumeRace();
         }
 
         private void ReturnToSetup_Click(
@@ -347,7 +414,12 @@ namespace QRCodeGenerator
             _hasStarted = true;
             _lastTimerUpdate = DateTime.Now;
 
-            _raceStopwatch.Start(); 
+            _raceStopwatch.Start();
+
+            _session.SetStatus(
+                RaceSessionStatus.Running,
+                _raceStopwatch.ElapsedMilliseconds
+);
 
             // Start the countdown and simulated lap timers.
             _countdownTimer.Start();
@@ -357,7 +429,7 @@ namespace QRCodeGenerator
             LatestEventTitle.Text = "Race started";
             LatestEventDetails.Text =
                 "The race countdown and lap simulation have started.";
-            
+
 
             var raceTimeStart = new RaceTimeStart { StartTime = DateTime.Now };
             foreach (var clientID in ClientStore.Clients.Keys)
